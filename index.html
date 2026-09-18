@@ -136,17 +136,7 @@
         </a>
       </div>
 
-      <!-- 10. Product Gallery -->
-      <div id="nav-grp-gallery">
-        <a href="/gallery" class="nav-item" data-page="gallery">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-          </span>
-          <span class="nav-text">Product Gallery</span>
-        </a>
-      </div>
-
-      <!-- 11. Manage Coupon -->
+      <!-- 10. Manage Coupon -->
       <div id="nav-grp-coupons">
         <a href="/coupons" class="nav-item" data-page="coupons">
           <span class="nav-icon">
@@ -156,7 +146,7 @@
         </a>
       </div>
 
-      <!-- 12. Barcode Printer -->
+      <!-- 11. Barcode Printer -->
       <div id="nav-grp-label-printer">
         <a href="/label-printer" class="nav-item" data-page="label-printer">
           <span class="nav-icon">
@@ -166,27 +156,24 @@
         </a>
       </div>
 
-      <div class="nav-divider"></div>
-
-      <!-- 13. Invoice Settings -->
-      <div id="nav-grp-settings">
-        <a href="javascript:void(0)" class="nav-item" id="nav-settings">
+      <!-- 12. Settings Dropdown -->
+      <div class="nav-group" id="nav-grp-settings-dropdown">
+        <div class="nav-group-header" data-group="settings">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </span>
-          <span class="nav-text">Invoice Settings</span>
-        </a>
+          <span class="nav-text">Settings</span>
+          <span class="nav-arrow">&#9656;</span>
+        </div>
+        <div class="nav-group-items">
+          <a href="/invoice-settings" class="nav-item sub-item" id="nav-invoice-settings" data-page="invoice-settings">Invoice settings</a>
+          <a href="/users" class="nav-item sub-item" id="nav-sub-users" data-page="users">Admin controll</a>
+          <a href="/payment-methods" class="nav-item sub-item" id="nav-sub-payment-methods" data-page="payment-methods">Payment method</a>
+          <a href="/gallery" class="nav-item sub-item" id="nav-sub-gallery" data-page="gallery">Gallery</a>
+        </div>
       </div>
 
-      <!-- 14. Admin Control -->
-      <div id="nav-grp-users">
-        <a href="/users" class="nav-item" data-page="users">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          </span>
-          <span class="nav-text">Admin Control</span>
-        </a>
-      </div>
+      <div class="nav-divider"></div>
 
       <!-- 15. Sign Out -->
       <a href="javascript:void(0)" class="nav-item" id="nav-logout" style="color:var(--danger);">
@@ -249,6 +236,7 @@
   <script src="js/coupons.js"></script>
   <script src="js/label-printer.js"></script>
   <script src="js/gallery.js"></script>
+  <script src="js/payment-methods.js"></script>
   <script src="js/app.js"></script>
   <div class="modal-overlay" id="global-modal-overlay"></div>
 </body>
