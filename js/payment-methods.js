@@ -192,13 +192,14 @@
       let activeIconType = pm ? (pm.iconType || 'preset') : 'preset';
       let activeIconValue = pm ? (pm.iconValue || 'wallet') : 'wallet';
 
+      overlay.classList.add('active');
       overlay.style.display = 'flex';
       overlay.innerHTML = `
         <div class="modal animate" style="max-width:540px; width:100%; border-radius:12px; overflow:hidden;">
           <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #edf2f7; padding:16px 20px;">
             <h3 style="margin:0; font-size:16px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-              ${isEdit ? 'Edit Payment Method' : 'Add New Payment Method'}
+              ${isEdit ? `Edit Payment Method — ${H.esc(pm.name)}` : 'Add New Payment Method'}
             </h3>
             <button class="modal-close" id="pm-modal-close" style="font-size:20px; line-height:1; background:none; border:none; cursor:pointer;">&times;</button>
           </div>
@@ -434,14 +435,19 @@
 
       // Close handlers
       const closeModal = () => {
+        overlay.classList.remove('active');
         overlay.style.display = 'none';
         overlay.innerHTML = '';
       };
       document.getElementById('pm-modal-close').onclick = closeModal;
       document.getElementById('pm-modal-cancel').onclick = closeModal;
+      overlay.onclick = (e) => {
+        if (e.target === overlay) closeModal();
+      };
 
       // Save handler
-      document.getElementById('pm-modal-save').onclick = async () => {
+      const saveBtn = document.getElementById('pm-modal-save');
+      saveBtn.onclick = async () => {
         const name = document.getElementById('pm-input-name').value.trim();
         if (!name) {
           H.showToast('Please specify a payment method name', 'error');
@@ -454,20 +460,26 @@
         const payload = {
           id: pm ? pm.id : undefined,
           name,
+          code: pm ? pm.code : name.toUpperCase(),
           color: activeColor,
           iconType: activeIconType,
           iconValue: activeIconValue,
           requiresLastFour,
           status,
-          isDefault: pm ? pm.isDefault : 0
+          isDefault: pm ? pm.isDefault : 0,
+          sortOrder: pm ? pm.sortOrder : 99
         };
 
-        const saveBtn = document.getElementById('pm-modal-save');
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
-        await this.savePaymentMethod(pm ? pm.id : null, payload);
-        closeModal();
+        const ok = await this.savePaymentMethod(pm ? pm.id : null, payload);
+        if (ok) {
+          closeModal();
+        } else {
+          saveBtn.disabled = false;
+          saveBtn.textContent = isEdit ? 'Save Changes' : 'Save Payment Method';
+        }
       };
     },
 
@@ -490,12 +502,15 @@
           // Invalidate cache and reload
           await H.loadPaymentMethods(true);
           await this.loadList();
+          return true;
         } else {
           H.showToast('Could not save payment method', 'error');
+          return false;
         }
       } catch (err) {
         console.error('Save payment method error:', err);
         H.showToast(err.message || 'Error saving payment method', 'error');
+        return false;
       }
     },
 
