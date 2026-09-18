@@ -512,6 +512,9 @@
           stock: item.stock
         });
       }
+      this.renderCart();
+      this.recalculate();
+    },
 
     addCustomProduct() {
       const customItem = {
