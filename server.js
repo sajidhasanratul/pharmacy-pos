@@ -256,6 +256,49 @@ const initDB = async () => {
     console.warn('Warning during database column migration check:', migErr.message);
   }
 
+  // Payment Methods Table
+  await dbQuery(`CREATE TABLE IF NOT EXISTS payment_methods (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50),
+    color VARCHAR(50) DEFAULT '#0d9488',
+    iconType VARCHAR(50) DEFAULT 'preset',
+    iconValue LONGTEXT,
+    requiresLastFour TINYINT(1) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'active',
+    isDefault TINYINT(1) DEFAULT 0,
+    sortOrder INT DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )`);
+
+  // Auto-seed default payment methods if empty
+  try {
+    const existingPms = await dbQuery(`SELECT COUNT(*) as count FROM payment_methods`);
+    if (existingPms[0].count === 0) {
+      console.log('Seeding default payment methods...');
+      const defaultMethods = [
+        { id: 'pm-cash', name: 'Cash', code: 'CASH', color: '#059669', iconType: 'preset', iconValue: 'cash', requiresLastFour: 0, status: 'active', isDefault: 1, sortOrder: 1 },
+        { id: 'pm-card', name: 'Card', code: 'CARD', color: '#4338CA', iconType: 'preset', iconValue: 'card', requiresLastFour: 1, status: 'active', isDefault: 1, sortOrder: 2 },
+        { id: 'pm-bkash', name: 'bKash', code: 'BKASH', color: '#E2136E', iconType: 'preset', iconValue: 'bkash', requiresLastFour: 1, status: 'active', isDefault: 1, sortOrder: 3 },
+        { id: 'pm-nagad', name: 'Nagad', code: 'NAGAD', color: '#F7941D', iconType: 'preset', iconValue: 'nagad', requiresLastFour: 1, status: 'active', isDefault: 1, sortOrder: 4 },
+        { id: 'pm-rocket', name: 'Rocket', code: 'ROCKET', color: '#8C3494', iconType: 'preset', iconValue: 'rocket', requiresLastFour: 1, status: 'active', isDefault: 1, sortOrder: 5 },
+        { id: 'pm-bank', name: 'Bank Transfer', code: 'BANK', color: '#2563EB', iconType: 'preset', iconValue: 'bank', requiresLastFour: 1, status: 'active', isDefault: 1, sortOrder: 6 },
+        { id: 'pm-other', name: 'Other', code: 'OTHER', color: '#64748B', iconType: 'preset', iconValue: 'wallet', requiresLastFour: 0, status: 'active', isDefault: 1, sortOrder: 7 }
+      ];
+
+      for (const m of defaultMethods) {
+        await dbQuery(
+          `INSERT INTO payment_methods (id, name, code, color, iconType, iconValue, requiresLastFour, status, isDefault, sortOrder) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [m.id, m.name, m.code, m.color, m.iconType, m.iconValue, m.requiresLastFour, m.status, m.isDefault, m.sortOrder]
+        );
+      }
+      console.log('Default payment methods seeded.');
+    }
+  } catch (seedErr) {
+    console.warn('Warning seeding payment methods:', seedErr.message);
+  }
+
   // Seeding Counters
   const counters = await dbQuery(`SELECT * FROM counters`);
   if (counters.length === 0) {
@@ -878,6 +921,107 @@ app.delete('/api/users/:id', verifyRole(['admin']), async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete primary admin account' });
     }
     await dbQuery(`DELETE FROM users WHERE id = ?`, [uid]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Payment Methods Endpoints ────────────────────
+app.get(['/api/payment-methods', '/api/payment_methods'], async (req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    const rows = await dbQuery(`SELECT * FROM payment_methods ORDER BY sortOrder ASC, createdAt ASC`);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post(['/api/payment-methods', '/api/payment_methods'], verifyRole(['admin', 'manager']), async (req, res) => {
+  try {
+    const { id, name, code, color, iconType, iconValue, requiresLastFour, status, isDefault, sortOrder } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Payment method name is required' });
+    }
+    const cleanName = name.trim();
+    const cleanId = id || 'pm_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    const cleanCode = (code || cleanName).trim().toUpperCase();
+    const cleanColor = color || '#0d9488';
+    const cleanIconType = iconType || 'preset';
+    const cleanIconVal = iconValue || 'wallet';
+    const reqFour = requiresLastFour ? 1 : 0;
+    const cleanStatus = status === 'inactive' ? 'inactive' : 'active';
+    const isDef = isDefault ? 1 : 0;
+    const order = parseInt(sortOrder) || 99;
+
+    await dbQuery(
+      `INSERT INTO payment_methods (id, name, code, color, iconType, iconValue, requiresLastFour, status, isDefault, sortOrder)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [cleanId, cleanName, cleanCode, cleanColor, cleanIconType, cleanIconVal, reqFour, cleanStatus, isDef, order]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        id: cleanId,
+        name: cleanName,
+        code: cleanCode,
+        color: cleanColor,
+        iconType: cleanIconType,
+        iconValue: cleanIconVal,
+        requiresLastFour: reqFour,
+        status: cleanStatus,
+        isDefault: isDef,
+        sortOrder: order
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['admin', 'manager']), async (req, res) => {
+  try {
+    const pmId = req.params.id;
+    const { name, code, color, iconType, iconValue, requiresLastFour, status, sortOrder } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Payment method name is required' });
+    }
+
+    const cleanName = name.trim();
+    const cleanCode = (code || cleanName).trim().toUpperCase();
+    const cleanColor = color || '#0d9488';
+    const cleanIconType = iconType || 'preset';
+    const cleanIconVal = iconValue || 'wallet';
+    const reqFour = requiresLastFour ? 1 : 0;
+    const cleanStatus = status === 'inactive' ? 'inactive' : 'active';
+    const order = parseInt(sortOrder) || 0;
+
+    await dbQuery(
+      `UPDATE payment_methods SET name = ?, code = ?, color = ?, iconType = ?, iconValue = ?, requiresLastFour = ?, status = ?, sortOrder = ? WHERE id = ?`,
+      [cleanName, cleanCode, cleanColor, cleanIconType, cleanIconVal, reqFour, cleanStatus, order, pmId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['admin', 'manager']), async (req, res) => {
+  try {
+    const pmId = req.params.id;
+    const rows = await dbQuery(`SELECT * FROM payment_methods WHERE id = ?`, [pmId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+    if (rows[0].isDefault === 1) {
+      return res.status(400).json({ error: 'Cannot delete default system payment method. You can mark it inactive instead.' });
+    }
+
+    await dbQuery(`DELETE FROM payment_methods WHERE id = ?`, [pmId]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
