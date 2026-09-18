@@ -41,13 +41,13 @@
         <div class="page-header fade-in" style="margin-bottom: 20px;">
           <div>
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-              <h2 class="page-title" style="margin:0; font-size:24px; font-weight:800; color:#0f172a;">Executive Pharmacy Dashboard</h2>
+              <h2 class="page-title" style="margin:0; font-size:24px; font-weight:800; color:#0f172a;">Pharmacy Dashboard</h2>
               <span class="badge" style="background:#ecfdf5; color:#059669; font-weight:700; border:1px solid #a7f3d0; font-size:11px; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:6px;">
                 <span class="pulse-dot"></span>
                 Live Register • Active
               </span>
             </div>
-            <p class="page-subtitle" style="margin-top:4px; font-size:13px; color:#64748b;">Real-time sales performance, revenue analytics, and multi-channel payment reconciliation.</p>
+            <p class="page-subtitle" style="margin-top:4px; font-size:13px; color:#FFFFFF;">Real-time sales performance, revenue analytics, and multi-channel payment reconciliation.</p>
           </div>
           <div class="page-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" id="btn-today">Today</button>
