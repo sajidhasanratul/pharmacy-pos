@@ -981,7 +981,7 @@ app.post(['/api/payment-methods', '/api/payment_methods'], verifyRole(['admin', 
   }
 });
 
-app.put(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['admin', 'manager']), async (req, res) => {
+const updatePaymentMethodHandler = async (req, res) => {
   try {
     const pmId = req.params.id;
     const { name, code, color, iconType, iconValue, requiresLastFour, status, sortOrder } = req.body;
@@ -995,7 +995,7 @@ app.put(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['a
     const cleanColor = color || '#0d9488';
     const cleanIconType = iconType || 'preset';
     const cleanIconVal = iconValue || 'wallet';
-    const reqFour = requiresLastFour ? 1 : 0;
+    const reqFour = (requiresLastFour === 1 || requiresLastFour === true || requiresLastFour === '1') ? 1 : 0;
     const cleanStatus = status === 'inactive' ? 'inactive' : 'active';
     const order = parseInt(sortOrder) || 0;
 
@@ -1008,9 +1008,12 @@ app.put(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['a
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
 
-app.delete(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(['admin', 'manager']), async (req, res) => {
+app.put('/api/payment-methods/:id', verifyRole(['admin', 'manager']), updatePaymentMethodHandler);
+app.put('/api/payment_methods/:id', verifyRole(['admin', 'manager']), updatePaymentMethodHandler);
+
+const deletePaymentMethodHandler = async (req, res) => {
   try {
     const pmId = req.params.id;
     const rows = await dbQuery(`SELECT * FROM payment_methods WHERE id = ?`, [pmId]);
@@ -1026,7 +1029,10 @@ app.delete(['/api/payment-methods/:id', '/api/payment_methods/:id'], verifyRole(
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+app.delete('/api/payment-methods/:id', verifyRole(['admin', 'manager']), deletePaymentMethodHandler);
+app.delete('/api/payment_methods/:id', verifyRole(['admin', 'manager']), deletePaymentMethodHandler);
 
 // ── Generic API Endpoints ───────────────────────
 
